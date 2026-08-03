@@ -1,0 +1,8 @@
+// app global css in SCSS form
+
+body {
+  font-family: 'Sarabun', sans-serif;
+}
+
+// ✅ Import global table styling - Based on NotificationHistory.vue
+@import './global-table-fixed.scss';

@@ -1,0 +1,301 @@
+/* ✅ Global Table Styling - Based on NotificationHistory.vue */
+
+/* ✅ เพิ่ม styling เหมือน sensor table - คัดลอกจาก NotificationHistory */
+:deep(.global-table) {
+  border: 2px solid #000 !important;
+  border-radius: 8px !important;
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+  font-family: 'Sarabun', sans-serif;
+  min-height: 600px;
+  background: white !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1) !important;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+}
+
+/* ✅ บังคับ table element ภายใน */
+:deep(.global-table table) {
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+  width: 100% !important;
+}
+
+/* ✅ Override Quasar's flat and bordered classes */
+:deep(.global-table.q-table--flat) {
+  border: 2px solid #000 !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+:deep(.global-table.q-table--bordered) {
+  border: 2px solid #000 !important;
+  border-radius: 8px !important;
+}
+
+:deep(.global-table .q-table__container) {
+  border: 2px solid #000 !important;
+  border-radius: 8px !important;
+  background: white !important;
+}
+
+/* ✅ เพิ่ม CSS สำหรับ Quasar table classes */
+:deep(.global-table .q-table) {
+  border: 2px solid #000 !important;
+  border-radius: 8px !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+:deep(.global-table .q-table__top) {
+  border-bottom: 1px solid #000 !important;
+}
+
+:deep(.global-table .q-table__middle) {
+  border: 1px solid #000 !important;
+}
+
+:deep(.global-table .q-table__bottom) {
+  border-top: 1px solid #000 !important;
+}
+
+:deep(.global-table thead tr) {
+  background-color: #222d32 !important;
+}
+
+/* ✅ CSS แข็งแรงสำหรับ override Quasar default */
+:deep(.global-table.q-table thead th),
+:deep(.global-table .q-table thead th),
+:deep(.global-table thead th) {
+  color: white !important;
+  font-size: 18px !important;
+  font-weight: bold !important;
+  border-right: 1px solid #000 !important;
+  border-bottom: 1px solid #000 !important;
+  border-top: 1px solid #000 !important;
+  border-left: 1px solid #000 !important;
+  padding: 12px 16px !important;
+  text-align: center !important;
+  height: 50px !important;
+  vertical-align: middle !important;
+  background-color: #222d32 !important;
+  border-width: 1px !important;
+  border-style: solid !important;
+}
+
+/* ✅ Override text-left และ sortable styling */
+:deep(.global-table thead th.text-left) {
+  text-align: center !important;
+}
+
+:deep(.global-table thead th.sortable) {
+  text-align: center !important;
+}
+
+/* ✅ จัด sort icon ให้อยู่ตรงกลาง */
+:deep(.global-table thead th .q-table__sort-icon) {
+  position: relative;
+  margin-left: 8px;
+}
+
+/* ✅ ทำให้ sortable column content อยู่กลาง */
+:deep(.global-table thead th.sortable .q-table__sort-icon--left) {
+  left: auto;
+  right: auto;
+}
+
+/* ✅ Override ทุก class ที่อาจมีผลต่อการจัดตำแหน่งหัวตาราง */
+:deep(.global-table thead th.text-right) {
+  text-align: center !important;
+}
+
+:deep(.global-table thead th.text-center) {
+  text-align: center !important;
+}
+
+/* ✅ ทำให้หัวตารางทุกอันมีขนาดและสไตล์เดียวกัน */
+:deep(.global-table thead th) {
+  font-size: 18px !important;
+  font-weight: bold !important;
+  color: white !important;
+/* ✅ Override text alignment สำหรับทุก cell */
+:deep(.global-table td),
+:deep(.global-table th) {
+  text-align: center !important;
+}
+
+/* ✅ Override Quasar's text-left classes */
+:deep(.global-table .text-left) {
+  text-align: center !important;
+}
+
+/* ✅ Override Quasar's q-td text alignment */
+:deep(.global-table .q-td) {
+  text-align: center !important;
+}
+
+:deep(.global-table tbody td) {
+  border-right: 1px solid #000 !important;
+  border-bottom: 1px solid #000 !important;
+  border-top: 1px solid #000 !important;
+  border-left: 1px solid #000 !important;
+  padding: 8px 12px;
+  height: 50px !important;
+  vertical-align: middle;
+  text-align: center !important;
+  font-size: 14px !important;
+}
+
+/* ✅ เพิ่ม CSS เพื่อบังคับเส้นขอบด้านข้างโดยตรง */
+:deep(.global-table td:not(:last-child)) {
+  border-right: 1px solid #000 !important;
+}
+
+:deep(.global-table th:not(:last-child)) {
+  border-right: 1px solid #000 !important;
+}
+
+:deep(.global-table td:not(:first-child)) {
+  border-left: 1px solid #000 !important;
+}
+
+:deep(.global-table th:not(:first-child)) {
+  border-left: 1px solid #000 !important;
+}
+
+:deep(.global-table .q-table__middle tbody tr) {
+  height: 50px !important;
+  border-bottom: 1px solid #000 !important;
+}
+
+/* ✅ บังคับเส้นขอบให้แสดงแม้ว่า Quasar จะพยายาม override */
+:deep(.global-table.q-table--bordered thead th) {
+  border-right: 1px solid #000 !important;
+  border-left: 1px solid #000 !important;
+}
+
+:deep(.global-table.q-table--bordered tbody td) {
+  border-right: 1px solid #000 !important;
+  border-left: 1px solid #000 !important;
+}
+
+/* ✅ Override Quasar's separator styling */
+:deep(.global-table .q-table thead tr:first-child th) {
+  border-top: 1px solid #000 !important;
+}
+
+:deep(.global-table .q-table tbody tr:last-child td) {
+  border-bottom: 1px solid #000 !important;
+}
+
+:deep(.global-table .q-table th:first-child, 
+       .global-table .q-table td:first-child) {
+  border-left: 1px solid #000 !important;
+}
+
+:deep(.global-table .q-table th:last-child, 
+       .global-table .q-table td:last-child) {
+  border-right: 1px solid #000 !important;
+}
+
+/* ✅ เพิ่ม zebra striping - สลับสีเทา-ขาว */
+:deep(.global-table .q-table__middle tbody tr:nth-child(even)) {
+  background-color: #f5f5f5;
+}
+
+:deep(.global-table .q-table__middle tbody tr:nth-child(odd)) {
+  background-color: #ffffff;
+}
+
+:deep(.global-table .q-table__middle tbody tr:hover) {
+  background-color: #e3f2fd !important;
+}
+
+/* ✅ Pagination controls */
+:deep(.global-table .q-table__bottom) {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+:deep(.global-table .q-table__bottom .q-table__control) {
+  justify-content: flex-end;
+}
+
+/* ✅ ลบกรอบของ dropdown pagination */
+:deep(.global-table .q-table__bottom .q-field--outlined .q-field__control) {
+  border: none;
+}
+
+:deep(.global-table .q-table__bottom .q-field__control:before) {
+  border: none;
+}
+
+:deep(.global-table .q-table__bottom .q-field__control:after) {
+  border: none;
+}
+
+/* ✅ Ultimate override - บังคับเส้นขอบให้แสดงแน่นอน */
+:deep(.global-table.q-table--bordered td),
+:deep(.global-table.q-table--horizontal-separator td),
+:deep(.global-table .q-table td) {
+  border-right: 1px solid #000 !important;
+  border-left: 1px solid #000 !important;
+  border-top: 1px solid #000 !important;
+  border-bottom: 1px solid #000 !important;
+}
+
+:deep(.global-table.q-table--bordered th),
+:deep(.global-table.q-table--horizontal-separator th),
+:deep(.global-table .q-table th) {
+  border-right: 1px solid #000 !important;
+  border-left: 1px solid #000 !important;
+  border-top: 1px solid #000 !important;
+  border-bottom: 1px solid #000 !important;
+}
+
+/* ✅ ซ่อน scrollbar ทั้งหมด */
+:deep(.global-table *) {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+}
+
+:deep(.global-table *::-webkit-scrollbar) {
+  width: 0px;
+  background: transparent; /* Chrome/Safari/Webkit */
+}
+
+/* ✅ Table middle scrollable area */
+:deep(.global-table .q-table__middle) {
+  overflow: auto;
+}
+
+/* ✅ Override Quasar's border-width: 0 setting */
+:deep(.global-table.q-table thead),
+:deep(.global-table.q-table td),
+:deep(.global-table.q-table th) {
+  border-style: solid !important;
+  border-width: 1px !important;
+  border-color: #000 !important;
+}
+
+/* ✅ Specific override for text-left and sortable headers */
+:deep(.global-table thead th.text-left),
+:deep(.global-table thead th.sortable),
+:deep(.global-table thead th.text-center) {
+  border: 1px solid #000 !important;
+  border-width: 1px !important;
+  border-style: solid !important;
+  border-color: #000 !important;
+  text-align: center !important;
+}
+
+/* ✅ บังคับให้ทุกเซลล์ในตารางอยู่ตรงกลาง */
+:deep(.global-table thead th),
+:deep(.global-table tbody td),
+:deep(.global-table .q-td),
+:deep(.global-table .text-left),
+:deep(.global-table .text-right),
+:deep(.global-table .sortable) {
+  text-align: center !important;
+}

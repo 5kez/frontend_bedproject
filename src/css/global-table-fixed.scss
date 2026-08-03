@@ -1,0 +1,73 @@
+/* Global Table Styling - SIMPLE AND EFFECTIVE */
+
+/* ✅ Force ALL Quasar table headers to be large and bold */
+.q-table thead th {
+  background-color: #222d32 !important;
+  color: white !important;
+  font-size: 20px !important;
+  font-weight: 900 !important;
+  text-align: center !important;
+  border: 0.5px solid #000 !important;
+  padding: 12px 16px !important;
+  height: 50px !important;
+  vertical-align: middle !important;
+}
+
+/* ✅ Force ALL Quasar table body content to be normal */
+.q-table tbody td {
+  font-size: 16px !important;
+  font-weight: 400 !important;
+  text-align: center !important;
+  border: 0.5px solid #000 !important;
+  padding: 8px 12px !important;
+  height: 50px !important;
+  vertical-align: middle !important;
+}
+
+/* ✅ Apply table container styling to ALL q-tables */
+.q-table {
+  background-color: white !important;
+  border-radius: 0 !important;
+  overflow: hidden !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1) !important;
+  border: 0.5px solid #000 !important;
+}
+
+/* ✅ Header background for all tables */
+.q-table thead tr {
+  background-color: #222d32 !important;
+}
+
+/* ✅ Zebra striping for all tables */
+.q-table tbody tr:nth-child(even) {
+  background-color: #f5f5f5 !important;
+}
+
+.q-table tbody tr:nth-child(odd) {
+  background-color: white !important;
+}
+
+.q-table tbody tr:hover {
+  background-color: #e3f2fd !important;
+}
+
+/* ✅ Override any alignment classes */
+.q-table th,
+.q-table td {
+  text-align: center !important;
+}
+
+.q-table .text-left,
+.q-table .text-right,
+.q-table .sortable {
+  text-align: center !important;
+}
+
+/* ✅ Hide bottom pagination border only */
+.q-table__bottom {
+  border: 1px solid transparent !important;
+  border-top: 1px solid transparent !important;
+  border-bottom: 1px solid transparent !important;
+  border-left: 1px solid transparent !important;
+  border-right: 1px solid transparent !important;
+}

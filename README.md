@@ -1,0 +1,265 @@
+<div align="center">
+
+# 🖥️ Smart Ward — Nurse & Admin Dashboard (Frontend)
+### แดชบอร์ดสำหรับพยาบาลและผู้ดูแลระบบติดตามเตียงผู้ป่วย
+
+**A real-time Vue 3 dashboard that turns live patient-vitals streams into the alerts and workflows a nursing team actually needs.**
+**แดชบอร์ด Vue 3 แบบเรียลไทม์ที่แปลงข้อมูลสัญญาณชีพผู้ป่วยแบบสดให้กลายเป็นการแจ้งเตือนและ workflow ที่ทีมพยาบาลใช้งานได้จริง**
+
+[English](#english) · [ภาษาไทย](#thai)
+
+![Vue.js](https://img.shields.io/badge/Vue.js-3-4FC08D?style=for-the-badge&logo=vuedotjs&logoColor=white)
+![Quasar](https://img.shields.io/badge/Quasar-2-1976D2?style=for-the-badge&logo=quasar&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.5-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
+![Pinia](https://img.shields.io/badge/State-Pinia-FFD859?style=for-the-badge&logo=pinia&logoColor=black)
+![Vite](https://img.shields.io/badge/Vite-6-646CFF?style=for-the-badge&logo=vite&logoColor=white)
+![Socket.IO](https://img.shields.io/badge/Socket.IO-Realtime%20WS-010101?style=for-the-badge&logo=socketdotio&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Multi--Stage%20Build-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+![Nginx](https://img.shields.io/badge/Nginx-Static%20Serving-009639?style=for-the-badge&logo=nginx&logoColor=white)
+![GitHub Actions](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
+![Chart.js](https://img.shields.io/badge/Charts-Chart.js%20%2F%20ECharts-FF6384?style=for-the-badge&logo=chartdotjs&logoColor=white)
+![Google Maps](https://img.shields.io/badge/Maps-Google%20Maps-4285F4?style=for-the-badge&logo=googlemaps&logoColor=white)
+![ESLint](https://img.shields.io/badge/Code%20Quality-ESLint%20%2B%20Prettier-4B32C3?style=for-the-badge&logo=eslint&logoColor=white)
+
+</div>
+
+---
+
+<a id="english"></a>
+## 🌐 EN — English
+
+### 📋 Overview
+
+**Smart Ward Dashboard** is the frontend for a hospital bed-monitoring platform. It's a single-page Vue 3 + Quasar application that gives nurses and administrators a live view of every patient, bed, and sensor across a hospital: real-time vitals and alerts pushed over WebSockets, bed/patient assignment workflows, department & building management, and analytics dashboards (Chart.js / ECharts) — all consuming the companion [NestJS backend](https://github.com/5kez/backend_bedproject).
+
+> This repository is the **frontend only**. It talks to the backend exclusively over REST (Axios) and Socket.IO.
+
+### ✨ Key Features & Engineering Highlights
+
+Each item below reflects a real problem found and fixed while hardening this codebase — not just a feature list.
+
+| Feature | Technical Challenge Solved |
+|---|---|
+| **Consolidated, authenticated API layer** | The app had **two independent Axios instances** — the shared one never actually attached a JWT (its interceptor was a no-op), and a second one read the token from the wrong `localStorage` key. In practice, **most of the app's ~20 Pinia stores were calling the backend with zero `Authorization` header.** Consolidated everything onto a single instance with a working auth interceptor and a 401 handler that clears the stale session. |
+| **Real-time vitals & alerts** | A dedicated `useWebSocket` composable subscribes to the backend's Socket.IO gateway for `patientVitalsUpdate` / `newNotification` events, keeping bed cards and alert lists live without polling. |
+| **Bed assignment & transfer workflows** | Dialog-driven assign / transfer / discharge flows with department-matching validation, so a patient can't be assigned to a bed in a different department by mistake. |
+| **Removed unused MQTT client** | A hand-rolled composable that manually built raw MQTT CONTROL packets over a plain `WebSocket` duplicated the backend's own real-time channel and was never imported anywhere — dead code, removed. |
+| **Type-safe API boundaries** | Replaced ad-hoc `as any` casts scattered across bed/patient/department forms with the fields the shared TypeScript models already declared, which also surfaced a couple of real bugs (a bed→department lookup was reading a field path that never existed on the API response). |
+| **Consistent, gated logging** | Migrated dozens of raw `console.log`/`console.error` calls to a shared `logger` utility that respects the `VITE_ENABLE_LOGGING` flag, so production builds don't spam the browser console. |
+| **Production-ready containerization** | Multi-stage Docker build serving the compiled SPA via Nginx with security headers, gzip, static-asset caching, and a `/health` endpoint for orchestrators. |
+
+### 🏗️ System Architecture
+
+```mermaid
+flowchart LR
+    Nurse["👩‍⚕️ Nurse / Admin\n(Browser)"]
+
+    subgraph SPA["Vue 3 + Quasar SPA (this repo)"]
+        Router["Vue Router\n(auth guard)"]
+        Pinia["Pinia Stores\n(patients, beds, sensors, ...)"]
+        Axios["Axios instance\n(JWT interceptor)"]
+        WS["useWebSocket composable"]
+        Maps["Google Maps\n(location picker)"]
+    end
+
+    subgraph Docker["🐳 Docker"]
+        Nginx[("Nginx\nstatic hosting")]
+    end
+
+    Backend["NestJS Backend API\n(REST + Socket.IO)"]
+    Gemini[["Google Maps API"]]
+
+    Nurse -- "HTTPS" --> Nginx
+    Nginx -- "serves compiled SPA" --> Nurse
+    Nurse -.-> Router --> Pinia
+    Pinia -- "REST calls\n(Bearer token)" --> Axios
+    Axios == "HTTPS" ==> Backend
+    WS == "Socket.IO (live vitals/alerts)" ==> Backend
+    Pinia --> WS
+    Maps -- "geocoding / map tiles" --> Gemini
+```
+
+**How it flows:** the browser loads the compiled SPA from **Nginx**; Vue Router's global guard blocks unauthenticated access to protected routes; every data-fetching action goes through **Pinia stores**, which call the backend exclusively through one shared **Axios instance** that automatically attaches the JWT from `localStorage` and clears it on a `401`; a separate **`useWebSocket`** composable keeps a live Socket.IO connection to the same backend for real-time vitals and alert push, so bed/patient cards update instantly without any polling.
+
+### 🚀 Local Setup Guide (Docker-first)
+
+This project ships with a **multi-stage Dockerfile** that builds the Quasar SPA and serves it through Nginx — no Node.js runtime needed in production.
+
+**Prerequisites:** [Docker Desktop](https://www.docker.com/products/docker-desktop/).
+
+```bash
+# 1. Clone the repository
+git clone <repository-url>
+cd bed-sensor-frontend
+
+# 2. Create your local environment file
+cp .env.example .env
+# → point VITE_API_BASE_URL / VITE_WEBSOCKET_URL at your running backend,
+#   and set VITE_GOOGLE_MAPS_API_KEY if you use the location picker
+
+# 3. Build and run the container
+docker build -t bed-sensor-frontend .
+docker run -p 8080:80 --env-file .env bed-sensor-frontend
+```
+
+> **Note:** Vite environment variables are baked into the JS bundle **at build time**, not read at container start. If you need different `VITE_*` values per environment, rebuild the image (`--build-arg` / a build-time `.env.production`) rather than relying on `docker run -e`.
+
+Once running:
+| Resource | URL |
+|---|---|
+| App | `http://localhost:8080` |
+| Health check | `http://localhost:8080/health` |
+
+<details>
+<summary><strong>Running without Docker (local Node.js)</strong></summary>
+
+```bash
+npm install
+cp .env.example .env.development   # or edit the existing .env.development
+npm run dev          # hot-reload dev server (quasar dev)
+npm run build        # production build -> dist/spa
+```
+</details>
+
+### 🔑 Environment Variables
+
+All configuration is driven by `VITE_*` environment variables — copy the template and fill in what your environment needs:
+
+```bash
+cp .env.example .env
+```
+
+| Variable | Purpose | Required |
+|---|---|:---:|
+| `VITE_API_BASE_URL` | Base URL of the backend REST API | ✅ |
+| `VITE_WEBSOCKET_URL` | Base URL for the Socket.IO real-time connection | ✅ |
+| `VITE_GOOGLE_MAPS_API_KEY` | Google Maps key used by the site/building location picker (restrict it by HTTP referrer in Google Cloud Console) | ✅ for map features |
+| `VITE_MQTT_BROKER_HOST` / `_PORT` / `_WEBSOCKET_PORT` / `_PROTOCOL` | Reserved for a future direct-MQTT client; not used by any active code path today | ⬜ |
+| `VITE_APP_NAME` / `VITE_APP_VERSION` | Branding shown in the UI | ⬜ |
+| `VUE_ROUTER_MODE` / `VUE_ROUTER_BASE` | Router history mode (`hash` for static hosting) and base path | ⬜ |
+| `VITE_ENABLE_DEBUG` / `VITE_ENABLE_LOGGING` | Toggle the shared `logger` utility's debug/console output | ⬜ |
+| `VITE_TOKEN_STORAGE_KEY` / `VITE_REFRESH_TOKEN_KEY` | `localStorage` keys used to persist the auth session | ⬜ |
+| `VITE_NOTIFICATION_TIMEOUT` / `VITE_WEBSOCKET_RECONNECT_*` | Real-time UX tuning (toast duration, reconnect attempts/delay) | ⬜ |
+| `VITE_MAX_FILE_SIZE` / `VITE_ALLOWED_FILE_TYPES` | Client-side upload validation limits | ⬜ |
+| `VITE_ITEMS_PER_PAGE` / `VITE_TABLE_ROWS_PER_PAGE` / `VITE_CHART_REFRESH_INTERVAL` | UI/table/chart defaults | ⬜ |
+
+### 🧪 Code Quality & CI
+
+```bash
+npm run lint          # ESLint (Vue + TypeScript)
+npx vue-tsc --noEmit   # type-check (strict mode, exactOptionalPropertyTypes)
+npm run format         # Prettier
+```
+
+GitHub Actions (`.github/workflows/ci.yml`) runs lint + type-check + build on every push/PR, and builds (and on `main`, publishes to GHCR) the production Docker image.
+
+### 📄 License
+
+Private / proprietary. All rights reserved.
+
+---
+
+<a id="thai"></a>
+## 🇹🇭 ภาษาไทย
+
+### 📋 ภาพรวมโครงการ
+
+**Smart Ward Dashboard** คือ frontend ของแพลตฟอร์มติดตามเตียงผู้ป่วยในโรงพยาบาล เป็นแอปพลิเคชัน Vue 3 + Quasar แบบ single-page ที่ให้พยาบาลและผู้ดูแลระบบเห็นภาพรวมของผู้ป่วย เตียง และเซนเซอร์ทั้งหมดแบบเรียลไทม์: สัญญาณชีพและการแจ้งเตือนที่ส่งผ่าน WebSocket, workflow การจัดเตียง/ย้ายผู้ป่วย, การจัดการแผนก/อาคาร และ dashboard วิเคราะห์ข้อมูล (Chart.js / ECharts) — เชื่อมต่อกับ [NestJS backend](https://github.com/5kez/backend_bedproject) คู่กัน
+
+> Repository นี้เป็นส่วน **frontend เท่านั้น** ติดต่อกับ backend ผ่าน REST (Axios) และ Socket.IO เท่านั้น
+
+### ✨ ฟีเจอร์หลักและจุดเด่นทางเทคนิค
+
+แต่ละรายการด้านล่างคือปัญหาจริงที่พบและแก้ไขระหว่างการทำความสะอาดโค้ด ไม่ใช่แค่รายการฟีเจอร์ทั่วไป
+
+| ฟีเจอร์ | ปัญหาทางเทคนิคที่แก้ไข |
+|---|---|
+| **รวม API layer ให้ปลอดภัยและยืนยันตัวตนถูกต้อง** | เดิมแอปมี **axios instance แยกกันสองตัว** — ตัวที่ใช้ร่วมกันไม่เคยแนบ JWT จริง (interceptor เป็น no-op) ส่วนอีกตัวอ่าน token จาก key ผิดใน `localStorage` ผลคือ **Pinia store เกือบ 20 ตัวเรียก backend โดยไม่มี Authorization header เลย** รวมเป็น instance เดียวพร้อม interceptor ที่ทำงานจริง และมี handler จัดการตอน token หมดอายุ (401) |
+| **สัญญาณชีพและการแจ้งเตือนแบบเรียลไทม์** | composable `useWebSocket` เชื่อมต่อ Socket.IO gateway ของ backend เพื่อรับ event `patientVitalsUpdate` / `newNotification` ทำให้การ์ดเตียงและรายการแจ้งเตือนอัปเดตทันทีโดยไม่ต้อง polling |
+| **Workflow การจัดเตียงและย้ายผู้ป่วย** | หน้าจัดเตียง/ย้าย/จำหน่ายผู้ป่วยพร้อมตรวจสอบว่าแผนกตรงกัน ป้องกันการจัดผู้ป่วยเข้าเตียงคนละแผนกโดยไม่ตั้งใจ |
+| **ลบ MQTT client ที่ไม่ได้ใช้งาน** | composable ที่เขียนขึ้นเองเพื่อสร้าง MQTT CONTROL packet ดิบผ่าน plain `WebSocket` ทำงานซ้ำซ้อนกับช่องทางเรียลไทม์ของ backend ที่มีอยู่แล้ว และไม่มีการ import ไปใช้ที่ไหนเลย — เป็น dead code จึงลบทิ้ง |
+| **Type safety ที่ขอบเขต API** | แทนที่ `as any` ที่กระจายอยู่ในฟอร์มเตียง/ผู้ป่วย/แผนกด้วย field ที่ TypeScript model ประกาศไว้อยู่แล้ว ซึ่งเผยบั๊กจริงด้วย (การหา department จากเตียงอ่าน field path ที่ไม่มีอยู่จริงใน response) |
+| **Logging ที่สม่ำเสมอและควบคุมได้** | ย้าย `console.log`/`console.error` แบบดิบหลายสิบจุดมาใช้ `logger` utility กลางที่เคารพ flag `VITE_ENABLE_LOGGING` ทำให้ production build ไม่ spam console ของ browser |
+| **Containerization พร้อมใช้งานจริง** | Docker แบบ multi-stage build เสิร์ฟ SPA ที่ compile แล้วผ่าน Nginx พร้อม security header, gzip, cache สำหรับ static asset และ endpoint `/health` สำหรับระบบ orchestrator |
+
+### 🏗️ ภาพรวมสถาปัตยกรรมระบบ
+
+ดูแผนภาพ Mermaid ในหัวข้อ **System Architecture** ด้านบน (ใช้ร่วมกันทั้งสองภาษา)
+
+**การทำงานโดยสรุป:** browser โหลด SPA ที่ compile แล้วจาก **Nginx**; guard กลางของ Vue Router จะกันไม่ให้เข้าถึง route ที่ต้อง login โดยไม่ได้ยืนยันตัวตน; ทุกการดึงข้อมูลผ่าน **Pinia store** ซึ่งเรียก backend ผ่าน **Axios instance เดียว** ที่แนบ JWT จาก `localStorage` ให้อัตโนมัติ และล้าง token ทิ้งเมื่อเจอ `401`; ส่วน **`useWebSocket`** composable แยกต่างหากจะเชื่อมต่อ Socket.IO กับ backend ตัวเดียวกันเพื่อรับสัญญาณชีพและการแจ้งเตือนแบบเรียลไทม์ ทำให้การ์ดเตียง/ผู้ป่วยอัปเดตทันทีโดยไม่ต้อง polling
+
+### 🚀 คู่มือการติดตั้งใช้งานบนเครื่อง Local (เน้น Docker)
+
+โปรเจกต์นี้มาพร้อม **Dockerfile แบบ multi-stage** ที่ build Quasar SPA แล้วเสิร์ฟผ่าน Nginx — ไม่ต้องมี Node.js runtime ใน production เลย
+
+**สิ่งที่ต้องมีก่อน:** [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+
+```bash
+# 1. Clone repository
+git clone <repository-url>
+cd bed-sensor-frontend
+
+# 2. สร้างไฟล์ environment ของตัวเอง
+cp .env.example .env
+# → กำหนด VITE_API_BASE_URL / VITE_WEBSOCKET_URL ให้ชี้ไปที่ backend ที่รันอยู่
+#   และตั้งค่า VITE_GOOGLE_MAPS_API_KEY ถ้าจะใช้ location picker
+
+# 3. Build และรัน container
+docker build -t bed-sensor-frontend .
+docker run -p 8080:80 --env-file .env bed-sensor-frontend
+```
+
+> **หมายเหตุ:** ตัวแปร environment ของ Vite จะถูกฝังเข้าไปใน JS bundle **ตอน build** ไม่ได้อ่านตอน container start ถ้าต้องการค่า `VITE_*` ต่างกันในแต่ละ environment ต้อง build image ใหม่ (ผ่าน `--build-arg` หรือไฟล์ `.env.production` ตอน build) ไม่ใช่ใช้ `docker run -e`
+
+เมื่อรันขึ้นแล้ว:
+| Resource | URL |
+|---|---|
+| แอป | `http://localhost:8080` |
+| Health check | `http://localhost:8080/health` |
+
+<details>
+<summary><strong>การรันแบบไม่ใช้ Docker (Node.js บนเครื่อง local)</strong></summary>
+
+```bash
+npm install
+cp .env.example .env.development   # หรือแก้ไฟล์ .env.development ที่มีอยู่
+npm run dev          # dev server แบบ hot-reload (quasar dev)
+npm run build        # production build -> dist/spa
+```
+</details>
+
+### 🔑 การตั้งค่า Environment Variables
+
+การตั้งค่าทั้งหมดมาจากตัวแปร `VITE_*` — คัดลอกไฟล์ตัวอย่างแล้วกรอกค่าที่ต้องใช้:
+
+```bash
+cp .env.example .env
+```
+
+| ตัวแปร | หน้าที่ | จำเป็น |
+|---|---|:---:|
+| `VITE_API_BASE_URL` | Base URL ของ backend REST API | ✅ |
+| `VITE_WEBSOCKET_URL` | Base URL สำหรับเชื่อมต่อ Socket.IO แบบเรียลไทม์ | ✅ |
+| `VITE_GOOGLE_MAPS_API_KEY` | Google Maps key สำหรับเลือกตำแหน่งของสถานที่/อาคาร (ควร restrict ด้วย HTTP referrer ใน Google Cloud Console) | ✅ ถ้าใช้ฟีเจอร์แผนที่ |
+| `VITE_MQTT_BROKER_HOST` / `_PORT` / `_WEBSOCKET_PORT` / `_PROTOCOL` | สำรองไว้สำหรับ MQTT client โดยตรงในอนาคต ปัจจุบันยังไม่มีโค้ดส่วนไหนใช้งานจริง | ⬜ |
+| `VITE_APP_NAME` / `VITE_APP_VERSION` | ชื่อแบรนด์ที่แสดงใน UI | ⬜ |
+| `VUE_ROUTER_MODE` / `VUE_ROUTER_BASE` | โหมด history ของ router (`hash` สำหรับ static hosting) และ base path | ⬜ |
+| `VITE_ENABLE_DEBUG` / `VITE_ENABLE_LOGGING` | เปิด/ปิด debug/console output ของ `logger` utility กลาง | ⬜ |
+| `VITE_TOKEN_STORAGE_KEY` / `VITE_REFRESH_TOKEN_KEY` | key ใน `localStorage` ที่ใช้เก็บ session การล็อกอิน | ⬜ |
+| `VITE_NOTIFICATION_TIMEOUT` / `VITE_WEBSOCKET_RECONNECT_*` | ปรับแต่ง UX เรียลไทม์ (ระยะเวลา toast, จำนวนครั้ง/ดีเลย์ในการ reconnect) | ⬜ |
+| `VITE_MAX_FILE_SIZE` / `VITE_ALLOWED_FILE_TYPES` | ขีดจำกัดการตรวจสอบไฟล์อัปโหลดฝั่ง client | ⬜ |
+| `VITE_ITEMS_PER_PAGE` / `VITE_TABLE_ROWS_PER_PAGE` / `VITE_CHART_REFRESH_INTERVAL` | ค่าเริ่มต้นของ UI/ตาราง/กราฟ | ⬜ |
+
+### 🧪 คุณภาพโค้ดและ CI
+
+```bash
+npm run lint          # ESLint (Vue + TypeScript)
+npx vue-tsc --noEmit   # ตรวจสอบ type (strict mode, exactOptionalPropertyTypes)
+npm run format         # Prettier
+```
+
+GitHub Actions (`.github/workflows/ci.yml`) รัน lint + type-check + build ทุกครั้งที่ push/PR และ build (พร้อม publish ขึ้น GHCR เมื่ออยู่บน branch `main`) Docker image สำหรับ production
+
+### 📄 สัญญาอนุญาต
+
+Private / proprietary สงวนสิทธิ์ทั้งหมด

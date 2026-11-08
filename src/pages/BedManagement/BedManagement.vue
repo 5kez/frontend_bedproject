@@ -633,7 +633,9 @@ onMounted(async () => {
       logger.log('📞 Calling bedStore.fetchBeds()...')
       const bedsPromise = bedStore.fetchBeds()
       logger.log('📞 Calling patientStore.fetchAllPatients()...')
-      const patientsPromise = patientStore.fetchAllPatients()
+      // force: the layout already loaded only the admin's own department, which
+      // left beds in other departments with nobody to assign
+      const patientsPromise = patientStore.fetchAllPatients(true)
       logger.log('⏳ Waiting for both promises...')
       await Promise.all([bedsPromise, patientsPromise])
       logger.log('✅ Both promises completed')

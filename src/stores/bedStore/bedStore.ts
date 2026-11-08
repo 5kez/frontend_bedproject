@@ -5,11 +5,61 @@ import { api } from 'src/boot/axios'
 import type { AxiosError } from 'axios'
 import { API_ENDPOINTS, buildApiUrl } from 'src/config/api'
 import type { Bed } from 'src/models'
+import { useAuthStore } from '../authStore/authStore'
 
 export const useBedStore = defineStore('bed', () => {
   const beds = ref<Bed[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
+
+  // Keep the bed_assignments history in step with the bed table. The bed
+  // screens used to only PATCH bed.patient_id, so assignment history (and the
+  // "discharge" bookkeeping that relies on it) never got recorded.
+  // Best effort: a failure here must not undo the bed change itself.
+  type Assignment = { assignment_id: number; patient_id: number; bed_id: number; status: string }
+  const currentUserId = () => useAuthStore().currentUser?.id ?? 0
+  const activeAssignmentForBed = async (bedId: number) => {
+    const res = await api.get<Assignment[]>(
+      buildApiUrl(API_ENDPOINTS.BED_ASSIGNMENTS_BY_BED(bedId)),
+    )
+    return res.data.find((a) => a.status === 'active')
+  }
+  const recordAssignment = async (
+    action: 'assign' | 'remove' | 'transfer',
+    bedId: number,
+    patientId?: number,
+    targetBedId?: number,
+  ) => {
+    try {
+      if (action === 'assign' && patientId) {
+        await api.post(buildApiUrl(API_ENDPOINTS.BED_ASSIGNMENTS), {
+          patient_id: patientId,
+          bed_id: bedId,
+          assigned_at: new Date().toISOString(),
+          assigned_by: currentUserId(),
+        })
+      } else if (action === 'remove') {
+        const active = await activeAssignmentForBed(bedId)
+        if (active) {
+          await api.post(buildApiUrl(API_ENDPOINTS.BED_DISCHARGE_PATIENT(active.assignment_id)), {
+            discharged_by: currentUserId(),
+          })
+        }
+      } else if (action === 'transfer' && targetBedId) {
+        const active = await activeAssignmentForBed(bedId)
+        if (active) {
+          await api.post(buildApiUrl(API_ENDPOINTS.BED_TRANSFER_PATIENT(active.assignment_id)), {
+            new_bed_id: targetBedId,
+            transferred_by: currentUserId(),
+          })
+        } else if (patientId) {
+          await recordAssignment('assign', targetBedId, patientId)
+        }
+      }
+    } catch (e) {
+      logger.warn('Could not record bed assignment history:', e)
+    }
+  }
 
   // helper function flatten bed
   const flattenBed = (bed: Bed) => ({
@@ -126,6 +176,7 @@ export const useBedStore = defineStore('bed', () => {
       // logger.log('Assigning patient - Data:', updateData)
 
       const res = await api.patch(buildApiUrl(`${API_ENDPOINTS.BEDS}/${bedId}`), updateData)
+      await recordAssignment('assign', bedId, patientId)
 
       // อัปเดตข้อมูลใน store โดยตรง แทนการเรียก fetchBeds()
       const bedIndex = beds.value.findIndex((b) => b.bed_id === bedId)
@@ -156,6 +207,7 @@ export const useBedStore = defineStore('bed', () => {
       }
 
       const res = await api.patch(buildApiUrl(`${API_ENDPOINTS.BEDS}/${bedId}`), updateData)
+      await recordAssignment('remove', bedId)
 
       // อัปเดตข้อมูลใน store โดยตรง
       const bedIndex = beds.value.findIndex((b) => b.bed_id === bedId)
@@ -208,6 +260,7 @@ export const useBedStore = defineStore('bed', () => {
       await api.patch(buildApiUrl(`${API_ENDPOINTS.BEDS}/${targetBedId}`), {
         patient_id: patientId,
       })
+      await recordAssignment('transfer', sourceBedId, patientId, targetBedId)
 
       // อัปเดตข้อมูลใน store โดยตรง
       const sourceBedIndex = beds.value.findIndex((b) => b.bed_id === sourceBedId)

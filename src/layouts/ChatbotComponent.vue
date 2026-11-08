@@ -68,10 +68,14 @@ async function send() {
   userMessage.value = input.value
   input.value = ''
   messages.value.push({ role: user?.name ?? 'user', text: userMessage.value })
-  await llmStore.sendChatToLLM(userMessage.value).then(() => {
-    if (llmStore.Message) {
-      messages.value.push({ role: 'HealthMate', text: llmStore.Message })
-    }
+  const ok = await llmStore.sendChatToLLM(userMessage.value)
+  // on failure the old reply used to be shown again (or nothing at all)
+  messages.value.push({
+    role: 'HealthMate',
+    text:
+      ok && llmStore.Message
+        ? llmStore.Message
+        : 'ขออภัย ตอนนี้ยังตอบไม่ได้ (บริการ AI ไม่พร้อมใช้งาน)',
   })
 }
 </script>

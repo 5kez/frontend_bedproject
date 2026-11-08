@@ -350,7 +350,7 @@ function toggleNotifications() {
 
 function openNotiDetail(noti: UINotification) {
   selectedNotification.value = {
-    รหัสผู้ป่วย: noti.id,
+    รหัสผู้ป่วย: noti.patientId,
     'ชื่อผู้ป่วย (ชื่อ-นามสกุล)': noti.patientName,
     ประเภท: noti.notificationTitle,
     รายละเอียด: noti.notificationInfo,

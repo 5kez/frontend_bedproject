@@ -208,7 +208,14 @@ const handleDeleteSite = async (id: number) => {
     'confirm-cancel',
   )
   if (confirmed) {
-    await siteStore.deleteSite(id)
+    const ok = await siteStore.deleteSite(id)
+    if (!ok) {
+      // the delete used to fail silently when the site still has buildings
+      await dialogStore.openDialog(
+        'ลบ Site ไม่ได้ เนื่องจากยังมีอาคารอยู่ใน Site นี้ กรุณาลบอาคารก่อน',
+        'confirm',
+      )
+    }
   }
 }
 

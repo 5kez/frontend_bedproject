@@ -49,6 +49,8 @@ export class HttpError extends Error {
     super(message)
   }
 }
+// same message the backend's exception filter returns for FK violations
+const IN_USE = 'ไม่สามารถลบได้ เนื่องจากยังมีข้อมูลอื่นเชื่อมโยงอยู่'
 const notFound = (msg: string) => new HttpError(404, msg)
 const badRequest = (msg: string) => new HttpError(400, msg)
 
@@ -516,7 +518,10 @@ route(
 
 // --------------------------------------------------- history-notification ----
 route('POST', '/history-notification', (req) => insert('history_notification', req.body), 201)
-route('GET', '/history-notification', () => rows('history_notification').map((h) => ({ ...h })))
+const newestFirst = (a: Row, b: Row) => String(b.Noti_time).localeCompare(String(a.Noti_time))
+route('GET', '/history-notification', () =>
+  [...rows('history_notification')].sort(newestFirst).map((h) => ({ ...h })),
+)
 route('GET', '/history-notification/:id', (_r, p) => {
   const h = byId('history_notification', p.id)
   return h ? { ...h } : ''
@@ -524,6 +529,7 @@ route('GET', '/history-notification/:id', (_r, p) => {
 route('GET', '/history-notification/site/:site_id', (_r, p) =>
   rows('history_notification')
     .filter((h) => byId('patient', h.Patient_Id)?.site_id == p.site_id)
+    .sort(newestFirst)
     .map((h) => ({ ...h })),
 )
 
@@ -570,7 +576,7 @@ route(
     const clash = rows('sensor').find(
       (x) => x.bed_id == p.bedId && x.sensor_type_id == s.sensor_type_id && x !== s,
     )
-    if (clash) throw new HttpError(500, 'เตียงนี้มี sensor type เดียวกันแล้ว')
+    if (clash) throw badRequest('เตียงนี้มี sensor type เดียวกันแล้ว')
     s.bed_id = n(p.bedId)
     touch(s)
     return { message: `ผูก sensor ID ${p.id} กับเตียง ID ${p.bedId} เรียบร้อยแล้ว` }
@@ -776,8 +782,7 @@ route(
   '/sites/:id',
   (_r, p) => {
     const s = mustFind('sites', p.id, 'Site')
-    if (rows('building').some((b) => b.site_id == s.site_id))
-      throw new HttpError(500, 'Site still has buildings')
+    if (rows('building').some((b) => b.site_id == s.site_id)) throw new HttpError(409, IN_USE)
     remove('sites', (x) => x === s)
     return ''
   },
@@ -827,7 +832,7 @@ route('PUT', '/building/:id', (req, p) => {
 route('DELETE', '/building/:id', (_r, p) => {
   const b = mustFind('building', p.id, 'Building')
   if (rows('department_building').some((d) => d.building_id == b.building_id)) {
-    throw new HttpError(500, 'อาคารนี้มีแผนกใช้งานอยู่ ไม่สามารถลบได้')
+    throw new HttpError(409, IN_USE)
   }
   remove('floor', (f) => f.building_id == b.building_id)
   remove('building', (x) => x === b)
@@ -1039,7 +1044,7 @@ route('PATCH', '/department-buildings/:id', (req, p) => {
 route('DELETE', '/department-buildings/:id', (_r, p) => {
   const d = mustFind('department_building', p.id, 'DepartmentBuilding')
   if (rows('bed').some((b) => b.department_building_id == d.department_building_id))
-    throw new HttpError(500, 'Ward still has beds')
+    throw new HttpError(409, IN_USE)
   remove('department_building', (x) => x === d)
   return ''
 })

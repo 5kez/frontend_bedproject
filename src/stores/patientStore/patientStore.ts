@@ -82,10 +82,12 @@ export const usePatientStore = defineStore('patient', () => {
       // ✅ ดึงทั้งหมดแล้วกรองที่ frontend เฉพาะ role = nurse
       const response = await api.get<Patient[]>(apiUrl)
 
-      const userRole = authStore.currentUser?.roles_code
+      // nurses are role_id 1 (roles_code 'US') - comparing roles_code to
+      // 'nurse' never matched, so nurses saw every department's patients
+      const isNurse = authStore.currentUser?.role_id === 1
 
       // กรองตาม department_id และ status = 1 เฉพาะ nurse
-      if (userRole === 'nurse') {
+      if (isNurse) {
         const filteredPatients = response.data.filter(
           (p) => p.department_id === department_id && p.status === 1,
         )
@@ -99,7 +101,7 @@ export const usePatientStore = defineStore('patient', () => {
         const filteredPatients = response.data.filter((p) => p.status === 1)
         patients.value = filteredPatients
         logger.log(
-          `✅ [PatientStore] ${userRole || 'Admin'} - fetchPatientsByDepartment: ${filteredPatients.length} patients`,
+          `✅ [PatientStore] ${authStore.currentUser?.roles_code || 'Admin'} - fetchPatientsByDepartment: ${filteredPatients.length} patients`,
         )
         return filteredPatients
       }
@@ -169,7 +171,7 @@ export const usePatientStore = defineStore('patient', () => {
       const userRole = authStore.currentUser?.roles_code
       const userDeptId = authStore.currentUser?.department_id
 
-      if (userRole === 'nurse' && userDeptId) {
+      if (authStore.currentUser?.role_id === 1 && userDeptId) {
         // Nurse: แสดงเฉพาะคนไข้ใน department ตัวเองที่ status = 1
         patients.value = response.data.filter(
           (p) => p.department_id === userDeptId && p.status === 1,
@@ -311,6 +313,29 @@ export const usePatientStore = defineStore('patient', () => {
       status: 0,
       update_user_id: updates.update_user_id!,
     })
+
+    // Also free the bed and close the active bed assignment - before, a
+    // discharged patient kept "occupying" the bed (and its sensors kept
+    // reporting for them).
+    try {
+      const { data: assignments } = await api.get<{ assignment_id: number; status: string }[]>(
+        buildApiUrl(API_ENDPOINTS.BED_ASSIGNMENTS_BY_PATIENT(id)),
+      )
+      const active = assignments.find((a) => a.status === 'active')
+      if (active) {
+        await api.post(buildApiUrl(API_ENDPOINTS.BED_DISCHARGE_PATIENT(active.assignment_id)), {
+          discharged_by: updates.update_user_id,
+        })
+      }
+      const { data: beds } = await api.get<{ bed_id: number; patient_id: number | null }[]>(
+        buildApiUrl(API_ENDPOINTS.BEDS),
+      )
+      for (const bed of beds.filter((b) => b.patient_id === id)) {
+        await api.patch(buildApiUrl(`${API_ENDPOINTS.BEDS}/${bed.bed_id}`), { patient_id: null })
+      }
+    } catch (e) {
+      logger.error('Discharged patient but could not free the bed:', e)
+    }
   }
 
   // ========================================
@@ -331,6 +356,7 @@ export const usePatientStore = defineStore('patient', () => {
       return true
     } catch {
       error.value = 'Failed to analyze patient'
+      analyseMessage.value = 'ไม่สามารถวิเคราะห์ได้ในขณะนี้ (บริการ AI ไม่พร้อมใช้งาน)'
       return false
     } finally {
       loading.value = false

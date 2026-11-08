@@ -128,6 +128,7 @@ const name = ref('')
 const mac = ref('')
 const desc = ref('')
 const sensorsType = ref<SensorType | null>(null)
+const originalMac = ref('') // when editing, the sensor's own MAC is not a duplicate
 const router = useRouter()
 
 const cancelForm = () => {
@@ -179,6 +180,7 @@ onMounted(async () => {
     if (sensor) {
       name.value = sensor.name
       mac.value = sensor.mac
+      originalMac.value = sensor.mac
       desc.value = sensor.desc
       // ค้นหา SensorType ที่ตรงกับ id
       sensorsType.value =
@@ -189,6 +191,8 @@ onMounted(async () => {
 
 async function checkMacUnique(val: string) {
   if (!val) return true
+  // editing used to be impossible: the sensor's own MAC failed this check
+  if (originalMac.value && val.trim().toLowerCase() === originalMac.value.toLowerCase()) return true
   const isUnique = await sensorStore.isMacUnique(val)
   return isUnique || 'Mac Address นี้ถูกใช้แล้ว'
 }

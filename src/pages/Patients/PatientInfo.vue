@@ -278,12 +278,39 @@ const loadPatientData = async () => {
   }
 }
 
+// The API returns one row per sensor type ({ sensor_type_id, config }), but
+// this page expected a single { heartRate, oxygen, position } object, so it
+// crashed with "Cannot read properties of undefined (reading 'minValue')".
+// Build that object from the per-sensor rows (1 = BedSensor, 2 = HeartRate, 3 = SpO2).
+interface ApiSettingRow {
+  sensor_type_id: number
+  enabled?: boolean | number
+  config?: { alert_positions?: number[]; threshold_low?: number; threshold_high?: number }
+}
+function toAnalyserSetting(raw: unknown): NotificationSetting {
+  const rows = (Array.isArray(raw) ? raw : []) as ApiSettingRow[]
+  const cfg = (type: number) => rows.find((r) => Number(r.sensor_type_id) === type)?.config ?? {}
+  const alertPositions = cfg(1).alert_positions ?? []
+  return {
+    heartRate: {
+      minValue: cfg(2).threshold_low ?? 60,
+      maxValue: cfg(2).threshold_high ?? 100,
+      duration: 0,
+    },
+    oxygen: { minValue: cfg(3).threshold_low ?? 90, maxValue: 100, duration: 0 },
+    position: {
+      allowedValues: [1, 2, 3, 4, 5].filter((p) => !alertPositions.includes(p)),
+      duration: 0,
+    },
+  }
+}
+
 const AnalyserStatus = computed(() => {
   if (!Setting.value || !patientInfo.value) return 1
 
   const heartRate = patientInfo.value.heartRate
   const oxygen = patientInfo.value.oxygen
-  const position = patientStore.patientData!.position
+  const position = patientInfo.value.position
 
   const danger =
     heartRate < Setting.value.heartRate.minValue || // ต่ำ
@@ -333,9 +360,7 @@ onMounted(async () => {
   patientStore.forceResetLoading()
   await loadPatientData()
   await notisettingStore.fetchNotificationSettings(Number(route.params.patient_id))
-  Setting.value = Array.isArray(notisettingStore.notificationSettings)
-    ? notisettingStore.notificationSettings[0]
-    : notisettingStore.notificationSettings
+  Setting.value = toAnalyserSetting(notisettingStore.notificationSettings as unknown)
   initializeChart()
 })
 
@@ -368,6 +393,7 @@ const patientInfo = computed(() => {
     ...patient,
     heartRate: liveVitals.heartRate,
     oxygen: liveVitals.oxygen,
+    position: liveVitals.position,
     positionLabel: patientStore.getPositionLabel(liveVitals.position),
     positionImage: patientStore.getImagePosition(liveVitals.position),
     statusLabel: patientStore.getStatusLabel(liveVitals.status),

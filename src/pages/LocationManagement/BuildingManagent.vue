@@ -124,7 +124,7 @@
               <q-card-section>
                 <div class="text-caption text-grey-7 q-mb-xs">
                   <q-icon name="business" size="xs" class="q-mr-xs" />
-                  ชื่อออาคาร
+                  ชื่ออาคาร
                 </div>
                 <div class="text-h6 text-weight-medium">{{ selectedBuilding.build_name }}</div>
               </q-card-section>
@@ -224,7 +224,14 @@ function selectBuilding(id: number) {
 const handleDeleteBuilding = async (id: number) => {
   const confirmed = await dialogStore.openDialog('คุณต้องการลบตึกนี้หรือไม่?', 'confirm-cancel')
   if (confirmed) {
-    await buildingStore.deleteBuilding(id)
+    const ok = await buildingStore.deleteBuilding(id)
+    if (!ok) {
+      // the delete used to fail silently when departments/beds still use the building
+      await dialogStore.openDialog(
+        'ลบตึกไม่ได้ เนื่องจากยังมีแผนกหรือเตียงอยู่ในตึกนี้ กรุณาย้ายหรือลบออกก่อน',
+        'confirm',
+      )
+    }
   }
 }
 </script>

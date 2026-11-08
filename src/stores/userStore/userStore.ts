@@ -213,7 +213,7 @@ export const useUserStore = defineStore('user', () => {
       build_id: null,
       status: 1,
       roles_code: '',
-      floor_id: null,
+      floor_id: 0, // NOT NULL in the database and the form has no floor field
       profile_id: 0,
       department_id: null,
     }

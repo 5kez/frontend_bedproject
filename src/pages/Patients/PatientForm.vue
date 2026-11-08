@@ -451,6 +451,16 @@ const submitForm = async () => {
     if (!isEdit.value && !isAdmit.value) {
       logger.log(patientFormData.value)
       patientFormData.value.site_id = authStore.currentUser?.site_id || 1
+      // room_id / floor_id are NOT NULL in the database but the form has no
+      // field for them, so registering a patient failed on MySQL. Use the
+      // ward (department_building) of the chosen department.
+      const ward = departmentStore.departments.find(
+        (d) => d.id === patientFormData.value?.department_id,
+      )?.departmentBuildings?.[0]
+      // the date field shows today by default but only writes on change
+      patientFormData.value.admitDate ??= new Date()
+      patientFormData.value.room_id ??= ward?.id ?? 0
+      patientFormData.value.floor_id ??= ward?.floor?.id ?? 0
       const newPatient = patientFormData.value
       if (newPatient) {
         newPatient.create_user_id = authStore.currentUser?.id || 1

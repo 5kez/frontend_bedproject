@@ -616,19 +616,23 @@ const submitForm = async () => {
       }
       // UserId = UserFormData.value.id
     } else {
-      const newUser = await userStore.createUser(UserFormData.value)
+      // Create the profile first so the new user can point at it - the user
+      // used to be saved with profile_id = undefined/1 and the profile created
+      // afterwards was never linked.
       let newProfile = null
       if (ProfileFormData.value) {
         ProfileFormData.value.name = UserFormData.value.name
         ProfileFormData.value.surname = UserFormData.value.last_name
         ProfileFormData.value.site_id = UserFormData.value.site_id
         newProfile = await profileStore.createprofile(ProfileFormData.value)
-      }
-      if (newUser && newUser.id) {
-        if (newProfile && newProfile.id) {
+        if (newProfile?.id) {
+          UserFormData.value.profile_id = newProfile.id
+          ProfileFormData.value.id = newProfile.id
           ProfileId = newProfile.id
         }
-      } else {
+      }
+      const newUser = await userStore.createUser(UserFormData.value)
+      if (!newUser || !newUser.id) {
         logger.error('❌ Error: createUser() ไม่คืนค่า')
       }
     }

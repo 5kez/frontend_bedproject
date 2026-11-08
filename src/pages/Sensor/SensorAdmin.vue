@@ -230,12 +230,16 @@ const availableBedsForTransfer = computed(() => {
   return bedStore.beds
     .filter((bed) => {
       // ไม่แสดงเตียงปัจจุบันที่เซนเซอร์เชื่อมอยู่
-      if (bed.bed_id === selectedSensorForTransfer.value?.bed?.bed_id) return false
+      const currentBedId =
+        selectedSensorForTransfer.value?.bed_id ?? selectedSensorForTransfer.value?.bed?.bed_id
+      if (bed.bed_id === currentBedId) return false
 
       // ตรวจสอบว่าเตียงนั้นมี sensor type เดียวกันแล้วหรือไม่
       const existingSensorsOfSameType = sensors.value.filter(
         (sensor) =>
-          sensor.bed?.bed_id === bed.bed_id &&
+          // sensors from /sensors/site/:id carry bed_id but no `bed` relation,
+          // so this check never matched and every bed was offered
+          (sensor.bed_id ?? sensor.bed?.bed_id) === bed.bed_id &&
           sensor.sensorType_Id === selectedSensorForTransfer.value?.sensorType_Id,
       )
 
@@ -256,7 +260,9 @@ const availableBedsForPair = computed(() => {
       // ตรวจสอบว่าเตียงนั้นมี sensor type เดียวกันแล้วหรือไม่
       const existingSensorsOfSameType = sensors.value.filter(
         (sensor) =>
-          sensor.bed?.bed_id === bed.bed_id &&
+          // sensors from /sensors/site/:id carry bed_id but no `bed` relation,
+          // so this check never matched and every bed was offered
+          (sensor.bed_id ?? sensor.bed?.bed_id) === bed.bed_id &&
           sensor.sensorType_Id === selectedSensorForPair.value?.sensorType_Id,
       )
 

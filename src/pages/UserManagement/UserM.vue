@@ -69,13 +69,20 @@
       >
         <template v-slot:body-cell-status="props">
           <q-td :props="props">
+            <!-- status comes back from the API as the string "1"/"0" (varchar
+                 column), so compare as numbers or every user looks inactive -->
             <q-toggle
-              v-model="props.row.status"
+              :model-value="Number(props.row.status)"
               :true-value="1"
               :false-value="0"
               color="blue"
-              :label="props.row.status === 1 ? 'Active' : 'Inactive'"
-              @update:model-value="(val) => updateStatus(props.row, val)"
+              :label="Number(props.row.status) === 1 ? 'Active' : 'Inactive'"
+              @update:model-value="
+                (val) => {
+                  props.row.status = val
+                  updateStatus(props.row, val)
+                }
+              "
             />
           </q-td>
         </template>

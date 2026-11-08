@@ -93,20 +93,22 @@ export const useNotification = defineStore('notificationStore', () => {
   }
 
   // แปลง sensor_type_id เป็น notification type ที่ frontend ใช้
+  // sensor_type_id: 1 = BedSensor, 2 = HeartRate, 3 = SpO2 (same as the MQTT
+  // channels). HeartRate and SpO2 used to be swapped here, so heart-rate
+  // alerts were titled "SpO2" and vice versa.
   const mapSensorTypeToNotificationType = (sensorTypeId: number): number => {
     switch (sensorTypeId) {
       case 1:
         return 3 // BedSensor -> Position/Posture
       case 2:
-        return 1 // SpO2 -> SpO2
+        return 2 // HeartRate
       case 3:
-        return 2 // HeartRate -> HeartRate
+        return 1 // SpO2
       default:
         return 0
     }
   }
 
-  // ลบ notification (เปลี่ยนสถานะเป็น inactive)
   const removeNotification = (id: number) => {
     notifications.value = notifications.value.map((noti) => {
       if (noti.id === id) {

@@ -40,7 +40,7 @@
         @click="goToPatientForm"
       >
         <div class="row items-center no-wrap">
-          <span class="q-mr-sm">เพิ่มผู้ใช้</span>
+          <span class="q-mr-sm">เพิ่มผู้ป่วย</span>
           <q-btn
             round
             icon="add"

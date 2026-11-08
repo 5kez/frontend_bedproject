@@ -133,8 +133,8 @@
                           { label: '1 - ไม่อยู่เตียง', value: 1 },
                           { label: '2 - นั่ง', value: 2 },
                           { label: '3 - นอนซ้าย', value: 3 },
-                          { label: '4 - นอนขวา', value: 4 },
-                          { label: '5 - นอนกลาง', value: 5 },
+                          { label: '4 - นอนกลาง', value: 4 },
+                          { label: '5 - นอนขวา', value: 5 },
                         ]"
                         type="checkbox"
                         class="q-gutter-sm"

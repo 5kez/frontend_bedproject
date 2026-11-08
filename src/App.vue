@@ -2,6 +2,7 @@
   <router-view />
   <ConfirmDialog />
   <NotidetailDialog :show="false" :details="{}" />
+  <DemoBar v-if="isDemo" />
 </template>
 
 <script setup lang="ts">
@@ -10,8 +11,12 @@ import NotidetailDialog from './components/dialog/NotidetailDialog.vue'
 import { useAuthStore } from 'src/stores/authStore/authStore'
 import { usePatientStore } from 'src/stores/patientStore/patientStore'
 import { useRouter } from 'vue-router'
-import { watch } from 'vue'
+import { defineAsyncComponent, watch } from 'vue'
 import 'leaflet/dist/leaflet.css'
+
+// demo build only (VITE_DEMO=true): badge with role switcher + reset
+const isDemo = import.meta.env.VITE_DEMO === 'true'
+const DemoBar = isDemo ? defineAsyncComponent(() => import('src/demo/DemoBar.vue')) : null
 const authStore = useAuthStore()
 const patientStore = usePatientStore()
 const router = useRouter()

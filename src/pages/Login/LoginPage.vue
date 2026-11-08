@@ -4,7 +4,7 @@
       <q-card-section class="text-center">
         <!-- โลโก้ -->
         <div>
-          <img src="/bedicon/iconlogin.png" class="logo-image" />
+          <img src="bedicon/iconlogin.png" class="logo-image" />
         </div>
 
         <!-- ข้อความแนะนำ -->
@@ -55,6 +55,27 @@
           </q-card-section>
         </q-form>
       </q-card-section>
+      <q-card-section v-if="isDemo" class="q-pt-none text-center">
+        <q-separator class="q-mb-md" />
+        <div class="text-body2 text-weight-medium">เดโม: เลือกบทบาทเพื่อเข้าสู่ระบบทันที</div>
+        <div class="text-caption text-grey-7 q-mb-sm">
+          ข้อมูลทั้งหมดเป็นข้อมูลสมมติ (รหัสผ่านทุกบัญชี: demo1234)
+        </div>
+        <div class="row q-gutter-sm justify-center">
+          <q-btn
+            v-for="r in demoRoles"
+            :key="r.user"
+            outline
+            no-caps
+            dense
+            class="q-px-sm"
+            color="primary"
+            :icon="r.icon"
+            :label="r.label"
+            @click="quickLogin(r.user)"
+          />
+        </div>
+      </q-card-section>
       <LoginFailedDialog v-if="showDialog" :error-type="errorType" @close="showDialog = false" />
     </q-card>
   </q-page>
@@ -69,6 +90,24 @@ import { useRouter } from 'vue-router'
 const errorType = ref<'401' | '403' | 'other'>('other')
 
 const router = useRouter()
+
+// demo build only: one-click login per role
+const isDemo = import.meta.env.VITE_DEMO === 'true'
+const demoRoles = isDemo
+  ? [
+      { user: 'nurse', label: 'พยาบาล', icon: 'medical_services' },
+      { user: 'admin', label: 'ผู้ดูแลระบบ', icon: 'admin_panel_settings' },
+      { user: 'superadmin', label: 'ผู้ดูแลสูงสุด', icon: 'verified_user' },
+      { user: 'reception', label: 'ประชาสัมพันธ์', icon: 'support_agent' },
+      { user: 'tech', label: 'ช่างเทคนิค', icon: 'build' },
+    ]
+  : []
+async function quickLogin(user: string) {
+  email.value = user
+  password.value = 'demo1234'
+  await btnLogin()
+}
+
 const email = ref('')
 const password = ref('')
 const authStore = useAuthStore()

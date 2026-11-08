@@ -406,21 +406,21 @@ export const usePatientStore = defineStore('patient', () => {
     // Return appropriate image path based on position
     switch (position) {
       case -1:
-        return '/bedicon/alert.png'
+        return 'bedicon/alert.png'
       case 0:
-        return '/bedicon/alert.png'
+        return 'bedicon/alert.png'
       case 1:
-        return '/bedicon/outofbed.png'
+        return 'bedicon/outofbed.png'
       case 2:
-        return '/bedicon/sit.png'
+        return 'bedicon/sit.png'
       case 3:
-        return '/bedicon/left.png'
+        return 'bedicon/left.png'
       case 4:
-        return '/bedicon/center.png'
+        return 'bedicon/center.png'
       case 5:
-        return '/bedicon/right.png'
+        return 'bedicon/right.png'
       default:
-        return '/bedicon/alert.png'
+        return 'bedicon/alert.png'
     }
   }
 

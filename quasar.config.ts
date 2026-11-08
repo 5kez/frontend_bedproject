@@ -51,14 +51,18 @@ export default defineConfig((ctx) => {
 
       // rebuildCache: true, // rebuilds Vite/linter/etc cache on startup
 
-      publicPath: './',
+      // Quasar turns './' into '/'; set PUBLIC_PATH to serve from a sub-folder
+      // (the demo build lives at /demo/smartbed/ on skez.codes)
+      publicPath: process.env.PUBLIC_PATH || './',
       // analyze: true,
       // env: {},
       // rawDefine: {}
       // ignorePublicFolder: true,
       // minify: false,
       // polyfillModulePreload: true,
-      // distDir
+      // `npm run build:demo` (VITE_DEMO=true) builds the self-contained
+      // in-browser demo into its own folder
+      distDir: process.env.VITE_DEMO === 'true' ? 'dist/demo' : undefined,
 
       // extendViteConf (viteConf) {},
       // viteVuePluginOptions: {},
@@ -98,7 +102,7 @@ export default defineConfig((ctx) => {
     // Full list of options: https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#devserver
     devServer: {
       // https: true,
-      open: true, // opens browser window automatically
+      open: process.env.NO_OPEN ? false : true, // opens browser window automatically
     },
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#framework

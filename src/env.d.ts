@@ -47,6 +47,9 @@ interface ImportMetaEnv {
   readonly VITE_REFRESH_TOKEN_KEY: string
   readonly VITE_TOKEN_EXPIRY_BUFFER: string
 
+  // In-browser demo build (see src/demo) - 'true' to enable
+  readonly VITE_DEMO?: string
+
   // UI Settings
   readonly VITE_ITEMS_PER_PAGE: string
   readonly VITE_TABLE_ROWS_PER_PAGE: string

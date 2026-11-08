@@ -16,6 +16,8 @@
     "build:dev": "NODE_ENV=development quasar build",
     "build:prod": "NODE_ENV=production quasar build",
     "build:staging": "NODE_ENV=staging quasar build",
+    "build:demo": "VITE_DEMO=true PUBLIC_PATH=${PUBLIC_PATH:-/demo/smartbed/} quasar build",
+    "dev:demo": "VITE_DEMO=true quasar dev",
     "preview": "quasar build && quasar serve dist/spa --port 8080",
     "ci:install": "npm ci --cache .npm --prefer-offline",
     "ci:build": "npm run build:prod",

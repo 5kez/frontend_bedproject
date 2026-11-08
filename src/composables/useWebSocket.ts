@@ -1,5 +1,5 @@
 import { ref, onMounted, onUnmounted } from 'vue'
-import { io } from 'socket.io-client'
+import { connectSocket } from 'src/services/realtimeClient'
 import type { Socket } from 'socket.io-client'
 import { useNotification } from 'src/stores/notificationStore/notificationStore'
 import { API_CONFIG } from 'src/config/api'
@@ -24,7 +24,7 @@ export function useWebSocket() {
   onMounted(() => {
     isConnecting.value = true
 
-    socket = io(API_CONFIG.WEBSOCKET_URL, {
+    socket = connectSocket(API_CONFIG.WEBSOCKET_URL, {
       // เพิ่ม options เพื่อให้เชื่อมต่อเร็วขึ้น
       transports: ['websocket', 'polling'],
       timeout: 5000,

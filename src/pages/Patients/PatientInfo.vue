@@ -100,7 +100,7 @@
             <strong>อัตราการเต้นหัวใจ</strong>
           </q-card-section>
           <q-card-section class="flex flex-center column">
-            <img src="/bedicon/heart-rate.png" alt="Heart Rate Icon" class="icon-image" />
+            <img src="bedicon/heart-rate.png" alt="Heart Rate Icon" class="icon-image" />
             <div class="text-h5 q-mt-sm" v-if="patientInfo?.status === 0">
               {{ 'N/A' }}
             </div>
@@ -172,7 +172,7 @@
           <!-- สำหรับรักษาอยู่ -->
           <q-card-section class="flex flex-center column" v-if="patientInfo?.status === 1">
             <img
-              :src="AnalyserStatus === 1 ? '/bedicon/mark.png' : '/bedicon/check.png'"
+              :src="AnalyserStatus === 1 ? 'bedicon/mark.png' : 'bedicon/check.png'"
               alt="Status Icon"
               style="max-width: 40px"
             />

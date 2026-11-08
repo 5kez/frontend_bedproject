@@ -42,7 +42,15 @@ api.interceptors.response.use(
   },
 )
 
-export default defineBoot(({ app }) => {
+export default defineBoot(async ({ app }) => {
+  // Demo build (VITE_DEMO=true): answer every request in the browser from
+  // fictional data instead of calling the backend. The condition is a
+  // build-time constant, so the demo code is not part of the normal bundle.
+  if (import.meta.env.VITE_DEMO === 'true') {
+    const { installDemo } = await import('src/demo')
+    installDemo(api)
+  }
+
   // for use inside Vue files (Options API) through this.$axios and this.$api
 
   app.config.globalProperties.$axios = axios

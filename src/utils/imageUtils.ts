@@ -7,7 +7,12 @@ import { API_CONFIG } from 'src/config/api'
  */
 export function normalizeImageUrl(imageUrl: string | null | undefined): string {
   if (!imageUrl) {
-    return '/bedicon/bed.jpg' // Default fallback image
+    return 'bedicon/bed.jpg' // Default fallback image
+  }
+
+  // Inline images (the in-browser demo stores uploads as data URLs)
+  if (/^(data|blob):/.test(imageUrl)) {
+    return imageUrl
   }
 
   // If it's already a relative path starting with /uploads/

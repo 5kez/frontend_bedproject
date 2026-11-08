@@ -1,7 +1,15 @@
+// A relative base such as '/api' (backend behind the same nginx) is turned
+// into an absolute URL, otherwise axios would prefix it a second time
+// ('/api/api/...') for URLs built with buildApiUrl().
+function absolute(url: string): string {
+  if (/^(https?|wss?):\/\//.test(url) || typeof window === 'undefined') return url
+  return new URL(url, window.location.origin).href.replace(/\/$/, '')
+}
+
 // API Configuration
 export const API_CONFIG = {
-  BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000',
-  WEBSOCKET_URL: import.meta.env.VITE_WEBSOCKET_URL || 'http://localhost:3000',
+  BASE_URL: absolute(import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'),
+  WEBSOCKET_URL: absolute(import.meta.env.VITE_WEBSOCKET_URL || 'http://localhost:3000'),
   MQTT_BROKER_HOST: import.meta.env.VITE_MQTT_BROKER_HOST || 'localhost',
   MQTT_BROKER_PORT: parseInt(import.meta.env.VITE_MQTT_BROKER_PORT || '1883'),
   MQTT_WEBSOCKET_PORT: parseInt(import.meta.env.VITE_MQTT_WEBSOCKET_PORT || '8083'),

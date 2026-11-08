@@ -25,7 +25,7 @@
 
 ---
 
-## ▶ Live demo · ทดลองใช้งาน
+## Live demo · ทดลองใช้งาน
 
 **[skez.codes/demo/smartbed](https://skez.codes/demo/smartbed/)** — runs entirely in your browser with **fictional data**, no backend needed. Pick a role on the login page (all passwords `demo1234`):
 
